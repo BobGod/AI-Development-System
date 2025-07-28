@@ -1,0 +1,12 @@
+{
+  "health_check_interval": 30,
+  "performance_monitoring": true,
+  "log_retention_days": 30,
+  "metrics_collection": true,
+  "alert_thresholds": {
+    "cpu_usage": 80,
+    "memory_usage": 85,
+    "response_time": 5000,
+    "error_rate": 0.05
+  }
+}

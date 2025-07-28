@@ -1,0 +1,11 @@
+aiosqlite>=0.19.0
+asyncio
+dataclasses
+pathlib
+enum34
+typing
+logging
+json
+datetime
+uuid
+sqlite3

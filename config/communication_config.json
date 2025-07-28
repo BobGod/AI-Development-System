@@ -1,0 +1,9 @@
+{
+  "message_queue_size": 1000,
+  "message_timeout": 30,
+  "retry_attempts": 3,
+  "retry_delay": 2,
+  "num_workers": 3,
+  "enable_compression": false,
+  "enable_encryption": false
+}

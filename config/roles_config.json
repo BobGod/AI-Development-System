@@ -1,0 +1,133 @@
+{
+  "master_controller": {
+    "role_id": "master_controller",
+    "role_name": "项目总控制器",
+    "enabled": true,
+    "max_concurrent_tasks": 5,
+    "timeout_seconds": 300,
+    "auto_restart": true,
+    "priority": 1,
+    "config_params": {}
+  },
+  "memory_manager": {
+    "role_id": "memory_manager",
+    "role_name": "记忆管理器",
+    "enabled": true,
+    "max_concurrent_tasks": 3,
+    "timeout_seconds": 180,
+    "auto_restart": true,
+    "priority": 1,
+    "config_params": {
+      "storage_path": "data/memory",
+      "backup_interval": 300
+    }
+  },
+  "status_monitor": {
+    "role_id": "status_monitor",
+    "role_name": "状态监控器",
+    "enabled": true,
+    "max_concurrent_tasks": 2,
+    "timeout_seconds": 60,
+    "auto_restart": true,
+    "priority": 1,
+    "config_params": {
+      "check_interval": 30
+    }
+  },
+  "requirements_parser": {
+    "role_id": "requirements_parser",
+    "role_name": "需求解析器",
+    "enabled": true,
+    "max_concurrent_tasks": 3,
+    "timeout_seconds": 240,
+    "auto_restart": true,
+    "priority": 2,
+    "config_params": {}
+  },
+  "system_architect": {
+    "role_id": "system_architect",
+    "role_name": "系统架构师",
+    "enabled": true,
+    "max_concurrent_tasks": 2,
+    "timeout_seconds": 600,
+    "auto_restart": true,
+    "priority": 2,
+    "config_params": {}
+  },
+  "frontend_dev": {
+    "role_id": "frontend_dev",
+    "role_name": "前端开发工程师",
+    "enabled": true,
+    "max_concurrent_tasks": 4,
+    "timeout_seconds": 900,
+    "auto_restart": true,
+    "priority": 3,
+    "config_params": {
+      "tech_stack": [
+        "React",
+        "Vue",
+        "TypeScript"
+      ]
+    }
+  },
+  "backend_dev": {
+    "role_id": "backend_dev",
+    "role_name": "后端开发工程师",
+    "enabled": true,
+    "max_concurrent_tasks": 4,
+    "timeout_seconds": 900,
+    "auto_restart": true,
+    "priority": 3,
+    "config_params": {
+      "tech_stack": [
+        "Node.js",
+        "Python",
+        "Java"
+      ]
+    }
+  },
+  "fullstack_dev": {
+    "role_id": "fullstack_dev",
+    "role_name": "全栈开发工程师",
+    "enabled": true,
+    "max_concurrent_tasks": 3,
+    "timeout_seconds": 1200,
+    "auto_restart": true,
+    "priority": 3,
+    "config_params": {
+      "tech_stack": [
+        "MEAN",
+        "MERN",
+        "Django"
+      ]
+    }
+  },
+  "mobile_dev": {
+    "role_id": "mobile_dev",
+    "role_name": "移动端开发工程师",
+    "enabled": false,
+    "max_concurrent_tasks": 2,
+    "timeout_seconds": 1200,
+    "auto_restart": true,
+    "priority": 4,
+    "config_params": {
+      "tech_stack": [
+        "React Native",
+        "Flutter",
+        "Swift"
+      ]
+    }
+  },
+  "test_engineer": {
+    "role_id": "test_engineer",
+    "role_name": "测试工程师",
+    "enabled": true,
+    "max_concurrent_tasks": 3,
+    "timeout_seconds": 600,
+    "auto_restart": true,
+    "priority": 3,
+    "config_params": {
+      "coverage_threshold": 80
+    }
+  }
+}

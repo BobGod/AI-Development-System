@@ -1,0 +1,8 @@
+{
+  "enable_encryption": false,
+  "session_security": true,
+  "audit_logging": true,
+  "max_login_attempts": 3,
+  "password_min_length": 8,
+  "api_rate_limit": 100
+}

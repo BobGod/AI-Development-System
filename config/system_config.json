@@ -1,0 +1,111 @@
+{
+  "system": {
+    "name": "AI自主开发系统",
+    "version": "1.0.0",
+    "session_timeout": 3600,
+    "max_concurrent_tasks": 10,
+    "log_level": "INFO"
+  },
+  "roles": {
+    "master_controller": {
+      "enabled": true,
+      "max_concurrent_tasks": 5,
+      "timeout_seconds": 300,
+      "auto_restart": true,
+      "priority": 1
+    },
+    "memory_manager": {
+      "enabled": true,
+      "max_concurrent_tasks": 3,
+      "timeout_seconds": 180,
+      "auto_restart": true,
+      "priority": 1,
+      "storage_path": "data/memory",
+      "backup_interval": 300
+    },
+    "status_monitor": {
+      "enabled": true,
+      "max_concurrent_tasks": 2,
+      "timeout_seconds": 60,
+      "auto_restart": true,
+      "priority": 1,
+      "check_interval": 30,
+      "alert_thresholds": {
+        "cpu_usage": 80,
+        "memory_usage": 85,
+        "response_time": 5000
+      }
+    },
+    "requirements_parser": {
+      "enabled": true,
+      "max_concurrent_tasks": 3,
+      "timeout_seconds": 240,
+      "auto_restart": true,
+      "priority": 2
+    },
+    "system_architect": {
+      "enabled": true,
+      "max_concurrent_tasks": 2,
+      "timeout_seconds": 600,
+      "auto_restart": true,
+      "priority": 2
+    },
+    "frontend_dev": {
+      "enabled": true,
+      "max_concurrent_tasks": 4,
+      "timeout_seconds": 900,
+      "auto_restart": true,
+      "priority": 3,
+      "tech_stack": ["React", "Vue", "TypeScript"]
+    },
+    "backend_dev": {
+      "enabled": true,
+      "max_concurrent_tasks": 4,
+      "timeout_seconds": 900,
+      "auto_restart": true,
+      "priority": 3,
+      "tech_stack": ["Node.js", "Python", "Java"]
+    },
+    "fullstack_dev": {
+      "enabled": true,
+      "max_concurrent_tasks": 3,
+      "timeout_seconds": 1200,
+      "auto_restart": true,
+      "priority": 3,
+      "tech_stack": ["MEAN", "MERN", "Django"]
+    },
+    "mobile_dev": {
+      "enabled": false,
+      "max_concurrent_tasks": 2,
+      "timeout_seconds": 1200,
+      "auto_restart": true,
+      "priority": 4,
+      "tech_stack": ["React Native", "Flutter", "Swift"]
+    },
+    "test_engineer": {
+      "enabled": true,
+      "max_concurrent_tasks": 3,
+      "timeout_seconds": 600,
+      "auto_restart": true,
+      "priority": 3,
+      "coverage_threshold": 80
+    }
+  },
+  "communication": {
+    "message_queue_size": 1000,
+    "message_timeout": 30,
+    "retry_attempts": 3,
+    "retry_delay": 2
+  },
+  "monitoring": {
+    "health_check_interval": 30,
+    "performance_monitoring": true,
+    "log_retention_days": 30,
+    "metrics_collection": true
+  },
+  "security": {
+    "enable_encryption": true,
+    "session_security": true,
+    "audit_logging": true
+  }
+}

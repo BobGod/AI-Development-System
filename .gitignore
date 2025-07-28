@@ -1,0 +1,73 @@
+# AI Development System - Git Ignore
+# 忽略不相关的项目文件
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+*.egg-info/
+dist/
+build/
+
+# Logs
+logs/
+*.log
+spy.log
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Project specific
+data/memory/*.db
+data/projects/*/logs/
+*.pid
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Node modules (if any)
+node_modules/
+
+# Build artifacts
+target/
+*.class
+*.jar
+*.war
+
+# Backup files
+*_副本/
+*.backup
+*.bak
+
+# Test outputs
+test_output/
+coverage/
+
+# Personal workspace
+workspace/
+temp/
