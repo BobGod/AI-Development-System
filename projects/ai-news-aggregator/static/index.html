@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 AI智能新闻聚合平台</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* 头部样式 */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #2d3748;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .header .subtitle {
+            color: #718096;
+            text-align: center;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #4299e1;
+        }
+
+        .stat-label {
+            color: #718096;
+            font-size: 0.9rem;
+            margin-top: 4px;
+        }
+
+        /* 控制面板样式 */
+        .control-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .controls {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        /* 按钮样式 - 按钮级别设计 */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+        }
+
+        .btn-success:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(72, 187, 120, 0.4);
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #cbd5e0;
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+            color: white;
+        }
+
+        /* 加载状态 */
+        .btn.loading {
+            pointer-events: none;
+        }
+
+        .btn.loading::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            margin: auto;
+            border: 2px solid transparent;
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 选择器样式 */
+        .select {
+            padding: 10px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+
+        .select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        /* 新闻列表样式 */
+        .news-list {
+            display: grid;
+            gap: 20px;
+        }
+
+        .news-item {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            position: relative;
+        }
+
+        .news-item:hover {
+            transform: translateY(-4px);
+        }
+
+        .news-item.selected {
+            border: 2px solid #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .news-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .news-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #2d3748;
+            line-height: 1.4;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+
+        .news-title:hover {
+            color: #667eea;
+        }
+
+        .heat-score {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            px: 12px;
+            py: 6px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .news-meta {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+            color: #718096;
+        }
+
+        .news-content {
+            color: #4a5568;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .news-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 12px;
+        }
+
+        /* 处理结果样式 */
+        .processed-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 24px;
+            margin-top: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .platform-tabs {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .platform-tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            color: #718096;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .platform-tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .content-preview {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 16px 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .content-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 12px;
+        }
+
+        .content-text {
+            color: #4a5568;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .copy-button {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 12px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .control-group {
+                justify-content: center;
+            }
+            
+            .stats {
+                gap: 16px;
+            }
+            
+            .news-actions {
+                justify-content: center;
+            }
+        }
+
+        /* 动画效果 */
+        .fade-enter-active, .fade-leave-active {
+            transition: opacity 0.3s ease;
+        }
+
+        .fade-enter-from, .fade-leave-to {
+            opacity: 0;
+        }
+
+        .slide-enter-active, .slide-leave-active {
+            transition: all 0.3s ease;
+        }
+
+        .slide-enter-from {
+            transform: translateX(30px);
+            opacity: 0;
+        }
+
+        .slide-leave-to {
+            transform: translateX(-30px);
+            opacity: 0;
+        }
+
+        /* 工具提示 */
+        .tooltip {
+            position: relative;
+        }
+
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2d3748;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 1000;
+        }
+
+        /* 状态指示器 */
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .status-online { background: #48bb78; }
+        .status-busy { background: #ed8936; }
+        .status-offline { background: #f56565; }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="container">
+            <!-- 头部 -->
+            <div class="header">
+                <h1>🤖 AI智能新闻聚合平台</h1>
+                <p class="subtitle">超越量子位、机器之心的全自动化AI新闻收集和内容生成系统</p>
+                
+                <div class="stats">
+                    <div class="stat-item" v-if="stats">
+                        <div class="stat-number">{{ stats.total_news }}</div>
+                        <div class="stat-label">AI新闻</div>
+                    </div>
+                    <div class="stat-item" v-if="stats">
+                        <div class="stat-number">{{ stats.processed_content }}</div>
+                        <div class="stat-label">已处理</div>
+                    </div>
+                    <div class="stat-item" v-if="stats">
+                        <div class="stat-number">{{ Object.keys(stats.source_distribution || {}).length }}</div>
+                        <div class="stat-label">数据源</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">
+                            <span class="status-indicator" :class="systemStatus"></span>
+                        </div>
+                        <div class="stat-label">系统状态</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 控制面板 -->
+            <div class="control-panel">
+                <div class="controls">
+                    <div class="control-group">
+                        <select v-model="sortBy" class="select">
+                            <option value="heat_score">🔥 热度排序</option>
+                            <option value="published_time">📅 时间排序</option>
+                            <option value="source">📍 来源排序</option>
+                        </select>
+                        
+                        <select v-model="filterSource" class="select">
+                            <option value="">📍 所有来源</option>
+                            <option v-for="source in sources" :key="source" :value="source">
+                                📍 {{ source }}
+                            </option>
+                        </select>
+                        
+                        <select v-model="newsLimit" class="select">
+                            <option :value="10">📊 显示10条</option>
+                            <option :value="20">📊 显示20条</option>
+                            <option :value="50">📊 显示50条</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <button 
+                            class="btn btn-primary"
+                            :class="{ loading: loading.refresh }"
+                            @click="refreshNews"
+                            :disabled="loading.refresh"
+                        >
+                            🔄 {{ loading.refresh ? '刷新中...' : '刷新新闻' }}
+                        </button>
+                        
+                        <button 
+                            class="btn btn-secondary"
+                            @click="selectAll"
+                        >
+                            {{ allSelected ? '✅ 已全选' : '☑️ 全选' }}
+                        </button>
+                        
+                        <button 
+                            class="btn btn-success"
+                            :class="{ loading: loading.process }"
+                            @click="processSelected"
+                            :disabled="selectedNews.length === 0 || loading.process"
+                        >
+                            🧠 {{ loading.process ? '处理中...' : `生成内容(${selectedNews.length})` }}
+                        </button>
+                        
+                        <button 
+                            class="btn btn-primary"
+                            :class="{ loading: loading.images }"
+                            @click="generateImages"
+                            :disabled="selectedNews.length === 0 || loading.images"
+                        >
+                            🎨 {{ loading.images ? '生成中...' : `配图(${selectedNews.length})` }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 新闻列表 -->
+            <div class="news-list">
+                <transition-group name="slide" tag="div">
+                    <div 
+                        v-for="news in filteredNews" 
+                        :key="news.id"
+                        class="news-item"
+                        :class="{ selected: selectedNews.includes(news.id) }"
+                        @click="toggleSelect(news.id)"
+                    >
+                        <div class="news-header">
+                            <div>
+                                <h3 class="news-title" @click.stop="openUrl(news.url)">
+                                    {{ news.title }}
+                                </h3>
+                                <div class="news-meta">
+                                    <span>📅 {{ formatTime(news.published_time) }}</span>
+                                    <span>📍 {{ news.source }}</span>
+                                    <span>🌐 {{ news.language === 'zh' ? '中文' : '英文' }}</span>
+                                    <span v-if="news.author">👤 {{ news.author }}</span>
+                                </div>
+                            </div>
+                            <div class="heat-score">
+                                🔥 {{ Math.round(news.heat_score) }}
+                            </div>
+                        </div>
+                        
+                        <p class="news-content">{{ news.content.slice(0, 200) }}...</p>
+                        
+                        <div class="news-actions">
+                            <button 
+                                class="btn btn-sm btn-primary"
+                                @click.stop="quickProcess(news.id, 'wechat')"
+                            >
+                                📱 公众号
+                            </button>
+                            <button 
+                                class="btn btn-sm btn-danger"
+                                @click.stop="quickProcess(news.id, 'xiaohongshu')"
+                            >
+                                🌸 小红书
+                            </button>
+                            <button 
+                                class="btn btn-sm btn-secondary"
+                                @click.stop="generateSingleImage(news.id)"
+                            >
+                                📸 配图
+                            </button>
+                            <button 
+                                class="btn btn-sm btn-secondary"
+                                @click.stop="openUrl(news.url)"
+                            >
+                                👁️ 原文
+                            </button>
+                        </div>
+                    </div>
+                </transition-group>
+            </div>
+
+            <!-- 处理结果 -->
+            <div v-if="processedContent && Object.keys(processedContent).length > 0" class="processed-content">
+                <h2>🎨 内容处理结果</h2>
+                
+                <div class="platform-tabs">
+                    <button 
+                        v-for="platform in Object.keys(processedContent)" 
+                        :key="platform"
+                        class="platform-tab"
+                        :class="{ active: activePlatform === platform }"
+                        @click="activePlatform = platform"
+                    >
+                        {{ platform === 'wechat' ? '📱 微信公众号' : '🌸 小红书' }}
+                    </button>
+                </div>
+                
+                <div v-if="activePlatform && processedContent[activePlatform]">
+                    <div 
+                        v-for="(content, index) in processedContent[activePlatform]" 
+                        :key="index"
+                        class="content-preview"
+                    >
+                        <button 
+                            class="btn btn-sm btn-success copy-button"
+                            @click="copyContent(content.formatted_content)"
+                        >
+                            📋 复制
+                        </button>
+                        
+                        <div class="content-title">{{ content.optimized_title }}</div>
+                        <div class="content-text">{{ content.formatted_content }}</div>
+                        
+                        <div class="news-meta">
+                            <span>🎯 互动评分: {{ content.engagement_score.toFixed(1) }}分</span>
+                            <span>⏱️ 阅读时间: {{ content.reading_time }}秒</span>
+                            <span>🏷️ 标签: {{ content.tags.join(', ') }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    news: [],
+                    selectedNews: [],
+                    processedContent: {},
+                    stats: null,
+                    loading: {
+                        refresh: false,
+                        process: false,
+                        images: false
+                    },
+                    sortBy: 'heat_score',
+                    filterSource: '',
+                    newsLimit: 20,
+                    activePlatform: 'wechat',
+                    systemStatus: 'status-online'
+                }
+            },
+            computed: {
+                sources() {
+                    return [...new Set(this.news.map(n => n.source))];
+                },
+                filteredNews() {
+                    let filtered = this.news;
+                    
+                    // 来源筛选
+                    if (this.filterSource) {
+                        filtered = filtered.filter(n => n.source === this.filterSource);
+                    }
+                    
+                    // 排序
+                    filtered.sort((a, b) => {
+                        if (this.sortBy === 'heat_score') {
+                            return b.heat_score - a.heat_score;
+                        } else if (this.sortBy === 'published_time') {
+                            return new Date(b.published_time) - new Date(a.published_time);
+                        } else if (this.sortBy === 'source') {
+                            return a.source.localeCompare(b.source);
+                        }
+                        return 0;
+                    });
+                    
+                    return filtered.slice(0, this.newsLimit);
+                },
+                allSelected() {
+                    return this.filteredNews.length > 0 && 
+                           this.filteredNews.every(n => this.selectedNews.includes(n.id));
+                }
+            },
+            methods: {
+                async loadNews() {
+                    try {
+                        const response = await axios.get('/api/news/latest?limit=50');
+                        if (response.data.success) {
+                            this.news = response.data.data;
+                        }
+                    } catch (error) {
+                        console.error('加载新闻失败:', error);
+                        alert('加载新闻失败');
+                    }
+                },
+                async loadStats() {
+                    try {
+                        const response = await axios.get('/api/stats');
+                        if (response.data.success) {
+                            this.stats = response.data.data;
+                        }
+                    } catch (error) {
+                        console.error('加载统计失败:', error);
+                    }
+                },
+                async refreshNews() {
+                    this.loading.refresh = true;
+                    try {
+                        const response = await axios.get('/api/news/latest?refresh=true&limit=50');
+                        if (response.data.success) {
+                            this.news = response.data.data;
+                            this.selectedNews = [];
+                            await this.loadStats();
+                            alert(`刷新成功！获取到 ${response.data.data.length} 条AI新闻`);
+                        }
+                    } catch (error) {
+                        console.error('刷新失败:', error);
+                        alert('刷新失败');
+                    } finally {
+                        this.loading.refresh = false;
+                    }
+                },
+                toggleSelect(newsId) {
+                    const index = this.selectedNews.indexOf(newsId);
+                    if (index > -1) {
+                        this.selectedNews.splice(index, 1);
+                    } else {
+                        this.selectedNews.push(newsId);
+                    }
+                },
+                selectAll() {
+                    if (this.allSelected) {
+                        this.selectedNews = [];
+                    } else {
+                        this.selectedNews = this.filteredNews.map(n => n.id);
+                    }
+                },
+                async processSelected() {
+                    if (this.selectedNews.length === 0) return;
+                    
+                    this.loading.process = true;
+                    try {
+                        const response = await axios.post('/api/content/process', {
+                            news_ids: this.selectedNews,
+                            platforms: ['wechat', 'xiaohongshu']
+                        });
+                        
+                        if (response.data.success) {
+                            this.processedContent = response.data.data;
+                            this.activePlatform = 'wechat';
+                            alert(`处理完成！生成了 ${this.selectedNews.length} 条内容`);
+                        }
+                    } catch (error) {
+                        console.error('内容处理失败:', error);
+                        alert('内容处理失败');
+                    } finally {
+                        this.loading.process = false;
+                    }
+                },
+                async generateImages() {
+                    if (this.selectedNews.length === 0) return;
+                    
+                    this.loading.images = true;
+                    try {
+                        const response = await axios.post('/api/images/generate', {
+                            news_ids: this.selectedNews,
+                            platforms: ['wechat', 'xiaohongshu']
+                        });
+                        
+                        if (response.data.success) {
+                            alert(`配图生成完成！生成了 ${this.selectedNews.length} 组图片`);
+                        }
+                    } catch (error) {
+                        console.error('配图生成失败:', error);
+                        alert('配图生成失败');
+                    } finally {
+                        this.loading.images = false;
+                    }
+                },
+                async quickProcess(newsId, platform) {
+                    try {
+                        const response = await axios.post('/api/content/process', {
+                            news_ids: [newsId],
+                            platforms: [platform]
+                        });
+                        
+                        if (response.data.success) {
+                            const content = response.data.data[platform][0];
+                            await navigator.clipboard.writeText(content.formatted_content);
+                            alert(`${platform === 'wechat' ? '公众号' : '小红书'}内容已复制到剪贴板！`);
+                        }
+                    } catch (error) {
+                        console.error('快速处理失败:', error);
+                        alert('处理失败');
+                    }
+                },
+                async generateSingleImage(newsId) {
+                    try {
+                        const response = await axios.post('/api/images/generate', {
+                            news_ids: [newsId],
+                            platforms: ['wechat']
+                        });
+                        
+                        if (response.data.success) {
+                            alert('配图生成完成！');
+                        }
+                    } catch (error) {
+                        console.error('配图生成失败:', error);
+                        alert('配图生成失败');
+                    }
+                },
+                async copyContent(content) {
+                    try {
+                        await navigator.clipboard.writeText(content);
+                        alert('内容已复制到剪贴板！');
+                    } catch (error) {
+                        console.error('复制失败:', error);
+                        alert('复制失败');
+                    }
+                },
+                openUrl(url) {
+                    window.open(url, '_blank');
+                },
+                formatTime(timeStr) {
+                    const time = new Date(timeStr);
+                    const now = new Date();
+                    const diff = now - time;
+                    const hours = Math.floor(diff / (1000 * 60 * 60));
+                    
+                    if (hours < 1) {
+                        return '刚刚';
+                    } else if (hours < 24) {
+                        return `${hours}小时前`;
+                    } else {
+                        return time.toLocaleDateString('zh-CN');
+                    }
+                }
+            },
+            async mounted() {
+                await this.loadNews();
+                await this.loadStats();
+                
+                // 定期更新
+                setInterval(() => {
+                    this.loadStats();
+                }, 30000);
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
