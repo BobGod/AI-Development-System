@@ -263,6 +263,91 @@ class AIImageGenerator:
             logger.error(f"图片尺寸调整失败: {e}")
             return image_data
 
+    def extract_english_keywords(self, text: str) -> str:
+        """从中文新闻标题中提取英文关键词"""
+        # 常见AI中英文对照词典
+        keyword_mapping = {
+            "GPT": "GPT",
+            "ChatGPT": "ChatGPT", 
+            "OpenAI": "OpenAI",
+            "AI": "AI",
+            "人工智能": "Artificial Intelligence",
+            "机器学习": "Machine Learning",
+            "深度学习": "Deep Learning",
+            "神经网络": "Neural Network",
+            "大模型": "Large Language Model",
+            "LLM": "LLM",
+            "模型": "Model",
+            "算法": "Algorithm",
+            "数据": "Data",
+            "训练": "Training",
+            "推理": "Inference",
+            "生成": "Generation",
+            "对话": "Conversation",
+            "聊天": "Chat",
+            "机器人": "Robot",
+            "自动驾驶": "Autonomous Driving",
+            "计算机视觉": "Computer Vision",
+            "自然语言": "Natural Language",
+            "语音": "Speech",
+            "图像": "Image",
+            "视频": "Video",
+            "文本": "Text",
+            "代码": "Code",
+            "编程": "Programming",
+            "软件": "Software",
+            "技术": "Technology",
+            "科技": "Tech",
+            "创新": "Innovation",
+            "发布": "Release",
+            "更新": "Update",
+            "升级": "Upgrade",
+            "突破": "Breakthrough",
+            "革命": "Revolution",
+            "未来": "Future",
+            "智能": "Intelligence",
+            "系统": "System",
+            "平台": "Platform",
+            "应用": "Application",
+            "工具": "Tool",
+            "服务": "Service",
+            "云": "Cloud",
+            "边缘": "Edge",
+            "物联网": "IoT",
+            "区块链": "Blockchain",
+            "元宇宙": "Metaverse",
+            "VR": "VR",
+            "AR": "AR",
+            "芯片": "Chip",
+            "处理器": "Processor",
+            "GPU": "GPU",
+            "CPU": "CPU",
+            "量子": "Quantum",
+            "5G": "5G",
+            "6G": "6G"
+        }
+        
+        # 提取已有的英文词汇
+        import re
+        english_words = re.findall(r'[A-Za-z0-9]+', text)
+        result_words = []
+        
+        # 添加英文词汇
+        for word in english_words:
+            if len(word) > 1:  # 排除单个字母
+                result_words.append(word)
+        
+        # 根据中文内容添加对应英文词汇
+        for chinese, english in keyword_mapping.items():
+            if chinese in text and english not in result_words:
+                result_words.append(english)
+        
+        # 如果没有找到关键词，使用默认的
+        if not result_words:
+            result_words = ["AI", "Technology", "Innovation"]
+        
+        return " • ".join(result_words[:3])  # 最多3个关键词，用点分隔
+
     def generate_text_image(self, text: str, config: ImageConfig) -> GeneratedImage:
         """生成文字图片（备用方案）- 使用英文避免中文乱码"""
         try:
@@ -302,15 +387,8 @@ class AIImageGenerator:
             
             draw.text((x, y), main_text, fill=(255, 255, 255), font=font_large)
             
-            # 绘制副标题 - 使用简化的英文关键词
-            if any(word in text.lower() for word in ['gpt', 'ai', 'openai']):
-                sub_text = "AI • Technology • Innovation"
-            elif any(word in text.lower() for word in ['robot', '机器人']):
-                sub_text = "Robot • AI • Future"
-            elif any(word in text.lower() for word in ['data', '数据']):
-                sub_text = "Data • Analytics • Intelligence"
-            else:
-                sub_text = "AI • News • Technology"
+            # 绘制副标题 - 使用提取的英文关键词
+            sub_text = self.extract_english_keywords(text)
             try:
                 bbox = draw.textbbox((0, 0), sub_text, font=font_small)
                 text_width = bbox[2] - bbox[0]
@@ -511,91 +589,6 @@ async def test_image_generator():
             print(f"来源: {item['source']}")
             print(f"路径: {item['filepath']}")
             print()
-
-    def extract_english_keywords(self, text: str) -> str:
-        """从中文新闻标题中提取英文关键词"""
-        # 常见AI中英文对照词典
-        keyword_mapping = {
-            "GPT": "GPT",
-            "ChatGPT": "ChatGPT", 
-            "OpenAI": "OpenAI",
-            "AI": "AI",
-            "人工智能": "Artificial Intelligence",
-            "机器学习": "Machine Learning",
-            "深度学习": "Deep Learning",
-            "神经网络": "Neural Network",
-            "大模型": "Large Language Model",
-            "LLM": "LLM",
-            "模型": "Model",
-            "算法": "Algorithm",
-            "数据": "Data",
-            "训练": "Training",
-            "推理": "Inference",
-            "生成": "Generation",
-            "对话": "Conversation",
-            "聊天": "Chat",
-            "机器人": "Robot",
-            "自动驾驶": "Autonomous Driving",
-            "计算机视觉": "Computer Vision",
-            "自然语言": "Natural Language",
-            "语音": "Speech",
-            "图像": "Image",
-            "视频": "Video",
-            "文本": "Text",
-            "代码": "Code",
-            "编程": "Programming",
-            "软件": "Software",
-            "技术": "Technology",
-            "科技": "Tech",
-            "创新": "Innovation",
-            "发布": "Release",
-            "更新": "Update",
-            "升级": "Upgrade",
-            "突破": "Breakthrough",
-            "革命": "Revolution",
-            "未来": "Future",
-            "智能": "Intelligence",
-            "系统": "System",
-            "平台": "Platform",
-            "应用": "Application",
-            "工具": "Tool",
-            "服务": "Service",
-            "云": "Cloud",
-            "边缘": "Edge",
-            "物联网": "IoT",
-            "区块链": "Blockchain",
-            "元宇宙": "Metaverse",
-            "VR": "VR",
-            "AR": "AR",
-            "芯片": "Chip",
-            "处理器": "Processor",
-            "GPU": "GPU",
-            "CPU": "CPU",
-            "量子": "Quantum",
-            "5G": "5G",
-            "6G": "6G"
-        }
-        
-        # 提取已有的英文词汇
-        import re
-        english_words = re.findall(r'[A-Za-z0-9]+', text)
-        result_words = []
-        
-        # 添加英文词汇
-        for word in english_words:
-            if len(word) > 1:  # 排除单个字母
-                result_words.append(word)
-        
-        # 根据中文内容添加对应英文词汇
-        for chinese, english in keyword_mapping.items():
-            if chinese in text and english not in result_words:
-                result_words.append(english)
-        
-        # 如果没有找到关键词，使用默认的
-        if not result_words:
-            result_words = ["AI", "Technology", "Innovation"]
-        
-        return " • ".join(result_words[:3])  # 最多3个关键词，用点分隔
 
 if __name__ == "__main__":
     asyncio.run(test_image_generator())
