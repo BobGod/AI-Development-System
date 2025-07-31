@@ -1,6 +1,15 @@
 # AI Development System - Git Ignore
 # 忽略不相关的项目文件
 
+# Security - 敏感配置文件
+.env
+.env.*
+*.env
+config/secrets.yaml
+config/secrets.json
+**/CONFIG.md
+projects/*/CONFIG.md
+
 # macOS
 .DS_Store
 .AppleDouble

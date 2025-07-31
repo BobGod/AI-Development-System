@@ -16,7 +16,7 @@
 
 ```bash
 # DeepSeek API密钥
-DEEPSEEK_API_KEY=sk-8e29fbe2c1bc4dbc9e67a743a994b8b1
+DEEPSEEK_API_KEY=your_deepseek_api_key_here
 
 # JWT密钥
 JWT_SECRET=your_jwt_secret_key_here
