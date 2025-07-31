@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 智能知识问答系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/element-plus@2.4.4/dist/index.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .chat-container {
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            text-align: right;
+        }
+
+        .message.assistant {
+            text-align: left;
+        }
+
+        .message-bubble {
+            display: inline-block;
+            max-width: 70%;
+            padding: 15px 20px;
+            border-radius: 20px;
+            word-wrap: break-word;
+            position: relative;
+        }
+
+        .message.user .message-bubble {
+            background: #007bff;
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.assistant .message-bubble {
+            background: white;
+            color: #333;
+            border: 1px solid #e0e0e0;
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .message-meta {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .input-area {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .input-field {
+            flex: 1;
+        }
+
+        .domain-select {
+            min-width: 120px;
+        }
+
+        .send-button {
+            height: 40px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .loading i {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .sidebar {
+            width: 300px;
+            background: white;
+            border-radius: 15px;
+            margin-left: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .main-layout {
+            display: flex;
+            gap: 20px;
+        }
+
+        .chat-section {
+            flex: 1;
+        }
+
+        .upload-area {
+            border: 2px dashed #d0d7de;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            border-color: #007bff;
+            background: #f8f9ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #007bff;
+            background: #e8f4ff;
+        }
+
+        .stats-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .stats-card h4 {
+            color: #495057;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+
+        .stats-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            font-size: 0.9em;
+        }
+
+        .confidence-bar {
+            height: 4px;
+            background: #e9ecef;
+            border-radius: 2px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #ffc107, #dc3545);
+            transition: width 0.5s ease;
+        }
+
+        .sources-list {
+            margin-top: 10px;
+        }
+
+        .source-item {
+            background: #e9ecef;
+            padding: 8px 12px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            margin: 5px 0;
+        }
+
+        .responsive-mobile {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .main-layout {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                margin-left: 0;
+                margin-top: 20px;
+                width: 100%;
+            }
+
+            .message-bubble {
+                max-width: 85%;
+            }
+
+            .responsive-mobile {
+                display: block;
+            }
+
+            .responsive-desktop {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-robot"></i> 智能知识问答系统</h1>
+            <p>基于DeepSeek大模型的多领域专业问答平台</p>
+        </div>
+
+        <div class="main-layout">
+            <div class="chat-section">
+                <div class="main-content">
+                    <div class="chat-container">
+                        <div class="chat-messages" id="chatMessages">
+                            <div class="message assistant">
+                                <div class="message-bubble">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <i class="fas fa-robot" style="color: #007bff;"></i>
+                                        <div>
+                                            <strong>欢迎使用智能知识问答系统！</strong><br>
+                                            我可以帮您解答各种专业问题，支持文档上传学习。请选择专业领域后开始提问。
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="message-meta">系统消息</div>
+                            </div>
+                        </div>
+
+                        <div class="input-area">
+                            <div class="input-container">
+                                <div class="input-field">
+                                    <el-input
+                                        v-model="currentQuestion"
+                                        type="textarea"
+                                        :rows="2"
+                                        placeholder="请输入您的问题..."
+                                        @keydown.ctrl.enter="sendQuestion"
+                                        :disabled="isLoading"
+                                        clearable>
+                                    </el-input>
+                                </div>
+                                <div class="domain-select">
+                                    <el-select v-model="selectedDomain" placeholder="选择领域">
+                                        <el-option label="通用" value="通用"></el-option>
+                                        <el-option label="医疗健康" value="医疗健康"></el-option>
+                                        <el-option label="法律咨询" value="法律"></el-option>
+                                        <el-option label="教育培训" value="教育"></el-option>
+                                        <el-option label="企业管理" value="企业"></el-option>
+                                        <el-option label="人工智能" value="人工智能"></el-option>
+                                    </el-select>
+                                </div>
+                                <el-button 
+                                    type="primary" 
+                                    @click="sendQuestion"
+                                    :loading="isLoading"
+                                    class="send-button">
+                                    <i class="fas fa-paper-plane"></i>
+                                </el-button>
+                            </div>
+                            <div style="margin-top: 10px; font-size: 0.8em; color: #666;">
+                                💡 提示: 按 Ctrl+Enter 快速发送
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <h3 style="margin-bottom: 20px; color: #495057;">
+                    <i class="fas fa-cogs"></i> 系统功能
+                </h3>
+
+                <!-- 文档上传区域 -->
+                <div class="upload-area" 
+                     @click="$refs.fileInput.click()"
+                     @dragover.prevent="handleDragOver"
+                     @drop.prevent="handleDrop"
+                     @dragleave="handleDragLeave">
+                    <i class="fas fa-cloud-upload-alt" style="font-size: 2em; color: #007bff; margin-bottom: 10px;"></i>
+                    <div><strong>上传文档到知识库</strong></div>
+                    <div style="font-size: 0.9em; color: #666; margin-top: 5px;">
+                        支持 PDF、Word、Excel、图片格式
+                    </div>
+                    <input type="file" 
+                           ref="fileInput" 
+                           @change="uploadFile" 
+                           accept=".pdf,.docx,.doc,.xlsx,.xls,.jpg,.jpeg,.png,.txt,.md"
+                           style="display: none;">
+                </div>
+
+                <!-- 系统统计 -->
+                <div class="stats-card">
+                    <h4><i class="fas fa-chart-bar"></i> 系统统计</h4>
+                    <div class="stats-item">
+                        <span>知识文档:</span>
+                        <span>{{ systemStats.totalDocuments || 0 }}</span>
+                    </div>
+                    <div class="stats-item">
+                        <span>知识块:</span>
+                        <span>{{ systemStats.totalChunks || 0 }}</span>
+                    </div>
+                    <div class="stats-item">
+                        <span>问答次数:</span>
+                        <span>{{ systemStats.totalQuestions || 0 }}</span>
+                    </div>
+                </div>
+
+                <!-- 最近回答置信度 -->
+                <div class="stats-card" v-if="lastConfidence > 0">
+                    <h4><i class="fas fa-gauge-high"></i> 回答置信度</h4>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" :style="{width: (lastConfidence * 100) + '%'}"></div>
+                    </div>
+                    <div style="text-align: center; margin-top: 5px; font-size: 0.9em;">
+                        {{ Math.round(lastConfidence * 100) }}%
+                    </div>
+                </div>
+
+                <!-- 信息来源 -->
+                <div class="stats-card" v-if="lastSources.length > 0">
+                    <h4><i class="fas fa-book"></i> 信息来源</h4>
+                    <div class="sources-list">
+                        <div class="source-item" v-for="source in lastSources" :key="source.chunk_id">
+                            {{ source.source_file }} ({{ Math.round(source.similarity_score * 100) }}%)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 快捷功能 -->
+                <div style="margin-top: 20px;">
+                    <el-button @click="clearChat" size="small" style="width: 100%; margin-bottom: 10px;">
+                        <i class="fas fa-broom"></i> 清空对话
+                    </el-button>
+                    <el-button @click="showSystemStatus" size="small" style="width: 100%;">
+                        <i class="fas fa-info-circle"></i> 系统状态
+                    </el-button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 系统状态弹窗 -->
+    <el-dialog v-model="statusDialogVisible" title="系统状态" width="600px">
+        <div v-if="systemStatus">
+            <div style="margin-bottom: 20px;">
+                <h4>系统信息</h4>
+                <p><strong>状态:</strong> {{ systemStatus.status }}</p>
+                <p><strong>运行时间:</strong> {{ formatUptime(systemStatus.uptime) }}</p>
+                <p><strong>支持领域:</strong> {{ systemStatus.supported_domains?.join(', ') }}</p>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <h4>组件状态</h4>
+                <div v-if="systemHealth">
+                    <p v-for="(status, component) in systemHealth.components" :key="component">
+                        <i :class="status ? 'fas fa-check-circle' : 'fas fa-times-circle'" 
+                           :style="status ? 'color: green;' : 'color: red;'"></i>
+                        {{ component }}: {{ status ? '正常' : '异常' }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </el-dialog>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/element-plus@2.4.4/dist/index.full.js"></script>
+    <script>
+        const { createApp, ref, onMounted, nextTick } = Vue;
+
+        createApp({
+            setup() {
+                const currentQuestion = ref('');
+                const selectedDomain = ref('通用');
+                const isLoading = ref(false);
+                const messages = ref([]);
+                const systemStats = ref({});
+                const lastConfidence = ref(0);
+                const lastSources = ref([]);
+                const statusDialogVisible = ref(false);
+                const systemStatus = ref(null);
+                const systemHealth = ref(null);
+
+                const sendQuestion = async () => {
+                    if (!currentQuestion.value.trim() || isLoading.value) return;
+
+                    const question = currentQuestion.value.trim();
+                    const domain = selectedDomain.value;
+
+                    // 添加用户消息
+                    messages.value.push({
+                        type: 'user',
+                        content: question,
+                        timestamp: new Date(),
+                        domain: domain
+                    });
+
+                    currentQuestion.value = '';
+                    isLoading.value = true;
+
+                    // 滚动到底部
+                    await nextTick();
+                    scrollToBottom();
+
+                    try {
+                        const response = await fetch('/ask', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                question: question,
+                                domain: domain,
+                                user_id: 'web_user_' + Date.now()
+                            })
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('网络请求失败');
+                        }
+
+                        const result = await response.json();
+
+                        // 添加助手回答
+                        messages.value.push({
+                            type: 'assistant',
+                            content: result.answer,
+                            timestamp: new Date(),
+                            confidence: result.confidence,
+                            sources: result.sources || [],
+                            reasoning: result.reasoning_steps || []
+                        });
+
+                        // 更新统计信息
+                        lastConfidence.value = result.confidence;
+                        lastSources.value = result.sources || [];
+
+                        // 滚动到底部
+                        await nextTick();
+                        scrollToBottom();
+
+                    } catch (error) {
+                        console.error('发送问题失败:', error);
+                        messages.value.push({
+                            type: 'assistant',
+                            content: '抱歉，发生了错误。请稍后重试。',
+                            timestamp: new Date(),
+                            isError: true
+                        });
+                    } finally {
+                        isLoading.value = false;
+                        await loadSystemStats();
+                    }
+                };
+
+                const uploadFile = async (event) => {
+                    const file = event.target.files[0];
+                    if (!file) return;
+
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('domain', selectedDomain.value);
+
+                    try {
+                        const response = await fetch('/documents/upload', {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            ElMessage.success(`文档上传成功！添加了 ${result.chunks_added} 个知识块`);
+                            await loadSystemStats();
+                        } else {
+                            ElMessage.error('文档上传失败: ' + result.message);
+                        }
+                    } catch (error) {
+                        console.error('上传失败:', error);
+                        ElMessage.error('文档上传失败，请稍后重试');
+                    }
+
+                    // 清空文件输入
+                    event.target.value = '';
+                };
+
+                const handleDragOver = (e) => {
+                    e.target.closest('.upload-area').classList.add('dragover');
+                };
+
+                const handleDragLeave = (e) => {
+                    e.target.closest('.upload-area').classList.remove('dragover');
+                };
+
+                const handleDrop = (e) => {
+                    e.target.closest('.upload-area').classList.remove('dragover');
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        const fakeEvent = { target: { files: files } };
+                        uploadFile(fakeEvent);
+                    }
+                };
+
+                const clearChat = () => {
+                    messages.value = [];
+                    lastConfidence.value = 0;
+                    lastSources.value = [];
+                };
+
+                const showSystemStatus = async () => {
+                    try {
+                        const [statusResponse, healthResponse] = await Promise.all([
+                            fetch('/status'),
+                            fetch('/health')
+                        ]);
+
+                        systemStatus.value = await statusResponse.json();
+                        systemHealth.value = await healthResponse.json();
+                        statusDialogVisible.value = true;
+                    } catch (error) {
+                        console.error('获取系统状态失败:', error);
+                        ElMessage.error('获取系统状态失败');
+                    }
+                };
+
+                const loadSystemStats = async () => {
+                    try {
+                        const response = await fetch('/status');
+                        const stats = await response.json();
+                        systemStats.value = stats;
+                    } catch (error) {
+                        console.error('加载统计信息失败:', error);
+                    }
+                };
+
+                const scrollToBottom = () => {
+                    const chatMessages = document.getElementById('chatMessages');
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                };
+
+                const formatUptime = (seconds) => {
+                    const hours = Math.floor(seconds / 3600);
+                    const minutes = Math.floor((seconds % 3600) / 60);
+                    return `${hours}小时${minutes}分钟`;
+                };
+
+                const renderMessage = (content) => {
+                    // 简单的markdown渲染
+                    return content
+                        .replace(/### (.*)/g, '<h4>$1</h4>')
+                        .replace(/## (.*)/g, '<h3>$1</h3>')
+                        .replace(/# (.*)/g, '<h2>$1</h2>')
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                        .replace(/\n/g, '<br>');
+                };
+
+                onMounted(() => {
+                    loadSystemStats();
+                });
+
+                return {
+                    currentQuestion,
+                    selectedDomain,
+                    isLoading,
+                    messages,
+                    systemStats,
+                    lastConfidence,
+                    lastSources,
+                    statusDialogVisible,
+                    systemStatus,
+                    systemHealth,
+                    sendQuestion,
+                    uploadFile,
+                    handleDragOver,
+                    handleDragLeave,
+                    handleDrop,
+                    clearChat,
+                    showSystemStatus,
+                    formatUptime,
+                    renderMessage
+                };
+            }
+        }).use(ElementPlus).mount('body');
+    </script>
+</body>
+</html>

@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 智能知识问答系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .main-content {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .chat-messages {
+            height: 400px;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            text-align: right;
+        }
+
+        .message.assistant {
+            text-align: left;
+        }
+
+        .message-bubble {
+            display: inline-block;
+            max-width: 70%;
+            padding: 15px 20px;
+            border-radius: 20px;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+
+        .message.user .message-bubble {
+            background: #007bff;
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.assistant .message-bubble {
+            background: white;
+            color: #333;
+            border: 1px solid #e0e0e0;
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .message-meta {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .input-area {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .input-field {
+            flex: 1;
+        }
+
+        .input-field textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            resize: none;
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        .domain-select select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            background: white;
+            min-width: 120px;
+        }
+
+        .send-button {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .send-button:hover {
+            background: #0056b3;
+        }
+
+        .send-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            flex: 1;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-card h4 {
+            color: #666;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+
+        .stat-card .number {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .upload-area {
+            background: white;
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover {
+            border-color: #007bff;
+            background: #f8f9ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #007bff;
+            background: #e8f4ff;
+        }
+
+        .error {
+            color: #dc3545;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+
+        .success {
+            color: #155724;
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 智能知识问答系统</h1>
+            <p>基于DeepSeek大模型的多领域专业问答平台</p>
+        </div>
+
+        <div class="stats" id="stats">
+            <div class="stat-card">
+                <h4>知识文档</h4>
+                <div class="number" id="docCount">0</div>
+            </div>
+            <div class="stat-card">
+                <h4>知识块</h4>
+                <div class="number" id="chunkCount">0</div>
+            </div>
+            <div class="stat-card">
+                <h4>问答次数</h4>
+                <div class="number" id="qaCount">0</div>
+            </div>
+        </div>
+
+        <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+            <div style="font-size: 2em; margin-bottom: 10px;">📄</div>
+            <div><strong>上传文档到知识库</strong></div>
+            <div style="font-size: 0.9em; color: #666; margin-top: 5px;">
+                支持 PDF、Word、Excel、图片格式
+            </div>
+            <input type="file" id="fileInput" style="display: none;" 
+                   accept=".pdf,.docx,.doc,.xlsx,.xls,.jpg,.jpeg,.png,.txt,.md">
+        </div>
+
+        <div class="main-content">
+            <div class="chat-messages" id="chatMessages">
+                <div class="message assistant">
+                    <div class="message-bubble">
+                        <strong>欢迎使用智能知识问答系统！</strong><br><br>
+                        我可以帮您解答各种专业问题，支持文档上传学习。请选择专业领域后开始提问。
+                    </div>
+                    <div class="message-meta">系统消息</div>
+                </div>
+            </div>
+
+            <div class="input-area">
+                <div class="input-container">
+                    <div class="input-field">
+                        <textarea id="questionInput" rows="2" placeholder="请输入您的问题..." 
+                                onkeydown="handleKeyDown(event)"></textarea>
+                    </div>
+                    <div class="domain-select">
+                        <select id="domainSelect">
+                            <option value="通用">通用</option>
+                            <option value="医疗健康">医疗健康</option>
+                            <option value="法律">法律咨询</option>
+                            <option value="教育">教育培训</option>
+                            <option value="企业">企业管理</option>
+                            <option value="人工智能">人工智能</option>
+                        </select>
+                    </div>
+                    <button class="send-button" onclick="sendQuestion()" id="sendBtn">
+                        发送 📤
+                    </button>
+                </div>
+                <div style="margin-top: 10px; font-size: 0.8em; color: #666;">
+                    💡 提示: 按 Ctrl+Enter 快速发送
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isLoading = false;
+
+        function handleKeyDown(event) {
+            if (event.ctrlKey && event.key === 'Enter') {
+                event.preventDefault();
+                sendQuestion();
+            }
+        }
+
+        async function sendQuestion() {
+            const questionInput = document.getElementById('questionInput');
+            const domainSelect = document.getElementById('domainSelect');
+            const sendBtn = document.getElementById('sendBtn');
+            const chatMessages = document.getElementById('chatMessages');
+
+            const question = questionInput.value.trim();
+            if (!question || isLoading) return;
+
+            const domain = domainSelect.value;
+
+            // 添加用户消息
+            addMessage('user', question, domain);
+            
+            // 清空输入框
+            questionInput.value = '';
+            
+            // 设置加载状态
+            isLoading = true;
+            sendBtn.disabled = true;
+            sendBtn.textContent = '发送中...';
+
+            // 添加加载消息
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'message assistant';
+            loadingDiv.id = 'loadingMessage';
+            loadingDiv.innerHTML = '<div class="message-bubble"><div class="loading">AI正在思考中...</div></div>';
+            chatMessages.appendChild(loadingDiv);
+            scrollToBottom();
+
+            try {
+                console.log('发送请求:', { question, domain });
+                
+                const response = await fetch('/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        question: question,
+                        domain: domain,
+                        user_id: 'web_user_' + Date.now()
+                    })
+                });
+
+                console.log('响应状态:', response.status);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`请求失败: ${response.status} - ${errorText}`);
+                }
+
+                const result = await response.json();
+                console.log('响应结果:', result);
+
+                // 移除加载消息
+                const loadingMsg = document.getElementById('loadingMessage');
+                if (loadingMsg) {
+                    loadingMsg.remove();
+                }
+
+                // 添加AI回答
+                let answerText = result.answer;
+                if (result.confidence) {
+                    answerText += `\n\n📊 置信度: ${Math.round(result.confidence * 100)}%`;
+                }
+                if (result.sources && result.sources.length > 0) {
+                    answerText += `\n📚 信息来源: ${result.sources.length}个文档`;
+                }
+
+                addMessage('assistant', answerText);
+
+                // 更新统计
+                await loadStats();
+
+            } catch (error) {
+                console.error('发送问题失败:', error);
+                
+                // 移除加载消息
+                const loadingMsg = document.getElementById('loadingMessage');
+                if (loadingMsg) {
+                    loadingMsg.remove();
+                }
+
+                // 添加错误消息
+                addMessage('assistant', `❌ 抱歉，发生了错误: ${error.message}\n\n请检查网络连接或稍后重试。`, null, true);
+            } finally {
+                // 恢复按钮状态
+                isLoading = false;
+                sendBtn.disabled = false;
+                sendBtn.textContent = '发送 📤';
+            }
+        }
+
+        function addMessage(type, content, domain = null, isError = false) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('zh-CN', {hour12: false});
+            
+            let domainText = domain ? ` (${domain})` : '';
+            let bubbleClass = isError ? 'message-bubble error' : 'message-bubble';
+            
+            messageDiv.innerHTML = `
+                <div class="${bubbleClass}">${content}</div>
+                <div class="message-meta">${timeStr}${domainText}</div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        function scrollToBottom() {
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch('/status');
+                const stats = await response.json();
+                
+                document.getElementById('docCount').textContent = stats.total_documents || 0;
+                document.getElementById('chunkCount').textContent = stats.total_chunks || 0;
+                document.getElementById('qaCount').textContent = stats.total_questions || 0;
+            } catch (error) {
+                console.error('加载统计失败:', error);
+            }
+        }
+
+        // 文件上传
+        document.getElementById('fileInput').addEventListener('change', async function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('domain', document.getElementById('domainSelect').value);
+
+            try {
+                addMessage('assistant', `📄 正在上传文档: ${file.name}...`);
+                
+                const response = await fetch('/documents/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    addMessage('assistant', `✅ 文档上传成功！\n📝 文件: ${file.name}\n📊 添加了 ${result.chunks_added} 个知识块`);
+                    await loadStats();
+                } else {
+                    addMessage('assistant', `❌ 文档上传失败: ${result.message}`, null, true);
+                }
+            } catch (error) {
+                console.error('上传失败:', error);
+                addMessage('assistant', `❌ 文档上传失败: ${error.message}`, null, true);
+            }
+
+            // 清空文件输入
+            event.target.value = '';
+        });
+
+        // 拖拽上传
+        const uploadArea = document.querySelector('.upload-area');
+        
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const fileInput = document.getElementById('fileInput');
+                fileInput.files = files;
+                fileInput.dispatchEvent(new Event('change'));
+            }
+        });
+
+        // 页面加载时获取统计
+        window.addEventListener('load', function() {
+            loadStats();
+            console.log('页面加载完成，系统初始化中...');
+        });
+    </script>
+</body>
+</html>

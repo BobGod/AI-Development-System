@@ -1,0 +1,19 @@
+{
+  "project_id": "project-20250729-f1a705ab",
+  "project_name": "智能知识问答系统",
+  "project_type": "ProjectType.WEB_APP",
+  "description": "基于DeepSeek大模型的多领域智能知识问答系统，支持文档解析、在线学习和专业问答",
+  "owner": "zhengwei",
+  "created_at": "2025-07-29T15:47:13.992145",
+  "status": "ProjectStatus.CREATED",
+  "version": "1.0.0",
+  "tech_stack": [
+    "Python",
+    "FastAPI",
+    "DeepSeek",
+    "ChromaDB",
+    "Vue.js"
+  ],
+  "requirements": {},
+  "constraints": {}
+}

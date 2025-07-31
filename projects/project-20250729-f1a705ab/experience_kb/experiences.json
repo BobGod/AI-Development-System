@@ -1,0 +1,106 @@
+{
+  "3a88a144-890f-4950-b04f-a285b42bcf68": {
+    "id": "3a88a144-890f-4950-b04f-a285b42bcf68",
+    "timestamp": "2025-07-30T18:06:16.759811",
+    "category": "optimization",
+    "problem_description": "PDF文档解析编码问题，中文内容变成乱码，导致向量搜索无法找到相关内容",
+    "solution_description": "1. 升级PDF解析库：PyPDF2 -> pdfplumber + PyMuPDF；2. 实现多层级解析策略；3. 清理损坏数据并重建知识库",
+    "code_changes": [
+      {
+        "file": "code/knowledge_ingestion/document_parser.py",
+        "change": "替换PyPDF2为pdfplumber和PyMuPDF，实现多层级PDF解析"
+      },
+      {
+        "file": "requirements.txt",
+        "change": "添加pdfplumber和pymupdf依赖"
+      }
+    ],
+    "impact_metrics": {
+      "中文字符提取成功率": "从0%提升到35.7%",
+      "PDF解析质量": "从乱码到完整可读",
+      "知识块数量": "删除18个损坏，新增6个高质量"
+    },
+    "lessons_learned": [
+      "PyPDF2对中文PDF支持不佳，pdfplumber是更好的选择",
+      "应该实现多层级解析策略：pdfplumber -> PyMuPDF -> OCR",
+      "PDF解析问题会影响整个知识库的有效性",
+      "需要定期检查和清理损坏的知识块"
+    ],
+    "tags": [
+      "PDF解析",
+      "中文编码",
+      "知识库",
+      "向量搜索"
+    ],
+    "confidence_score": 0.95,
+    "reuse_count": 0,
+    "effectiveness_score": 0.0
+  },
+  "e4066698-ba55-4bb8-aeba-6eebec33ce77": {
+    "id": "e4066698-ba55-4bb8-aeba-6eebec33ce77",
+    "timestamp": "2025-07-30T18:06:16.759824",
+    "category": "bug_fix",
+    "problem_description": "向量搜索返回0结果，相似度计算公式错误导致所有结果被过滤",
+    "solution_description": "修复相似度计算公式：从1.0-distance改为1.0/(1.0+distance)，适配ChromaDB的欧几里得距离",
+    "code_changes": [
+      {
+        "file": "code/knowledge_base/vector_store.py",
+        "change": "修复相似度计算公式，确保分数在0-1范围内"
+      }
+    ],
+    "impact_metrics": {
+      "搜索结果数量": "从0个提升到5个",
+      "相似度分数": "从负数修正到0.3-0.4合理范围",
+      "API搜索成功率": "从0%提升到100%"
+    },
+    "lessons_learned": [
+      "ChromaDB使用欧几里得距离，需要正确的相似度转换公式",
+      "相似度分数应该在0-1范围内，便于阈值过滤",
+      "向量搜索是知识问答系统的关键环节",
+      "应该有完善的搜索结果验证机制"
+    ],
+    "tags": [
+      "向量搜索",
+      "相似度计算",
+      "ChromaDB",
+      "搜索优化"
+    ],
+    "confidence_score": 0.9,
+    "reuse_count": 0,
+    "effectiveness_score": 0.0
+  },
+  "3329eb41-6719-46dd-a1fd-860a3b9e1e78": {
+    "id": "3329eb41-6719-46dd-a1fd-860a3b9e1e78",
+    "timestamp": "2025-07-30T18:06:16.759829",
+    "category": "optimization",
+    "problem_description": "AI问答系统无法使用已上传的文档知识，回答像纯粹的DeepSeek而非本地知识系统",
+    "solution_description": "端到端优化：PDF解析 -> 向量存储 -> 搜索检索 -> AI问答，确保整个知识流转链路正常",
+    "code_changes": [
+      {
+        "file": "multiple",
+        "change": "系统性优化PDF解析、向量搜索、知识检索等多个环节"
+      }
+    ],
+    "impact_metrics": {
+      "AI回答准确性": "能正确引用上传文档内容",
+      "置信度": "达到0.72高置信度",
+      "信息源引用": "明确标注PDF文档来源",
+      "知识库利用率": "从0%提升到正常使用"
+    },
+    "lessons_learned": [
+      "知识问答系统是一个端到端的复杂链路",
+      "每个环节的问题都会影响最终效果",
+      "需要有系统性的调试和验证方法",
+      "用户体验是检验系统有效性的最终标准"
+    ],
+    "tags": [
+      "端到端优化",
+      "知识问答",
+      "系统集成",
+      "用户体验"
+    ],
+    "confidence_score": 0.85,
+    "reuse_count": 0,
+    "effectiveness_score": 0.0
+  }
+}

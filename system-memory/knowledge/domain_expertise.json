@@ -1,0 +1,65 @@
+[
+  {
+    "entry_id": "35adeef5-aac0-4529-8445-838af001f849",
+    "memory_type": "MemoryType.PROJECT",
+    "category": "LearningCategory.BEST_PRACTICE",
+    "title": "项目创建: 智能行业知识问答系统",
+    "description": "成功创建web_app类型的项目",
+    "context": {
+      "project_id": "project-20250729-7c565101",
+      "project_type": "web_app",
+      "tech_stack": [
+        "Python",
+        "FastAPI",
+        "Vue.js",
+        "DeepSeek",
+        "ChromaDB",
+        "PostgreSQL"
+      ],
+      "template": null
+    },
+    "outcome": "项目创建成功",
+    "confidence": 0.8,
+    "importance": 5,
+    "created_at": "2025-07-29T14:07:17.178472",
+    "last_accessed": "2025-07-29T14:07:17.178472",
+    "access_count": 0,
+    "tags": [
+      "web_app",
+      "project_creation",
+      "success"
+    ],
+    "related_entries": []
+  },
+  {
+    "entry_id": "d9bac9fd-0cca-4ebc-bc10-9a854c808a32",
+    "memory_type": "MemoryType.PROJECT",
+    "category": "LearningCategory.BEST_PRACTICE",
+    "title": "项目创建: 智能知识问答系统",
+    "description": "成功创建web_app类型的项目",
+    "context": {
+      "project_id": "project-20250729-f1a705ab",
+      "project_type": "web_app",
+      "tech_stack": [
+        "Python",
+        "FastAPI",
+        "DeepSeek",
+        "ChromaDB",
+        "Vue.js"
+      ],
+      "template": null
+    },
+    "outcome": "项目创建成功",
+    "confidence": 0.8,
+    "importance": 5,
+    "created_at": "2025-07-29T15:47:13.993262",
+    "last_accessed": "2025-07-29T15:47:13.993262",
+    "access_count": 0,
+    "tags": [
+      "web_app",
+      "project_creation",
+      "success"
+    ],
+    "related_entries": []
+  }
+]

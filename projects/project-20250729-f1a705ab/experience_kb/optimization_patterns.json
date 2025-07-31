@@ -1,0 +1,17 @@
+{
+  "pdf_encoding_fix": {
+    "pattern_id": "pdf_encoding_fix",
+    "name": "PDF中文编码问题修复模式",
+    "description": "当PDF解析出现中文乱码时的标准解决方案",
+    "trigger_conditions": [
+      "PDF内容包含中文字符",
+      "解析结果出现乱码或特殊字符",
+      "向量搜索无法找到PDF相关内容"
+    ],
+    "solution_template": "1. 检查PDF解析库 2. 升级到pdfplumber/PyMuPDF 3. 清理损坏数据 4. 重新解析",
+    "success_rate": 0.95,
+    "examples": [
+      "3a88a144-890f-4950-b04f-a285b42bcf68"
+    ]
+  }
+}

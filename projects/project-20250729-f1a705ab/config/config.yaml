@@ -1,0 +1,145 @@
+# 智能行业知识问答系统 - 配置文件
+# 生产环境请修改相应的配置项
+
+# 系统基础配置
+system:
+  name: "智能行业知识问答系统"
+  version: "1.0.0"
+  description: "基于DeepSeek大模型的多领域智能知识问答系统"
+  debug: true
+  log_level: "INFO"
+
+# 服务器配置
+server:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 1
+  reload: true
+  cors_origins:
+    - "http://localhost:3000"
+    - "http://localhost:8080"
+    - "http://127.0.0.1:3000"
+
+# DeepSeek大模型配置
+deepseek:
+  api_key: "${DEEPSEEK_API_KEY}"  # 从环境变量获取
+  base_url: "https://api.deepseek.com/v1"
+  default_model: "deepseek-chat"
+  timeout: 60
+  max_retries: 3
+  default_temperature: 0.3
+  default_max_tokens: 1024
+
+# 向量数据库配置
+vector_store:
+  persist_directory: "knowledge_db"
+  collection_name: "knowledge_base"
+  embedding_model: "all-MiniLM-L6-v2"
+  chunk_size: 500
+  chunk_overlap: 50
+
+# 问答引擎配置
+qa_engine:
+  max_context_length: 4000
+  top_k_results: 5
+  similarity_threshold: 0.3
+  enable_reasoning: true
+  enable_source_citation: true
+  fallback_to_general: true
+  answer_cache_size: 1000
+
+# 文档解析配置
+document_parser:
+  supported_formats:
+    - ".pdf"
+    - ".docx"  
+    - ".txt"
+    - ".md"
+    - ".xlsx"
+    - ".jpg"
+    - ".jpeg"
+    - ".png"
+  max_file_size_mb: 50
+  ocr_language: "chi_sim+eng"
+  temp_upload_dir: "uploads"
+
+# 网络爬虫配置
+web_crawler:
+  max_pages: 100
+  delay_seconds: 1.0
+  timeout_seconds: 30
+  follow_links: true
+  max_depth: 2
+  user_agent: "Knowledge-QA-Bot/1.0"
+  crawl_data_dir: "crawl_data"
+  respect_robots_txt: true
+
+# 领域适配器配置
+domain_adapters:
+  medical:
+    enabled: true
+    strict_mode: true
+    require_disclaimers: true
+  legal:
+    enabled: false
+  education:
+    enabled: false
+  enterprise:
+    enabled: false
+
+# 安全配置
+security:
+  enable_auth: false  # 简化版本，实际部署时应启用
+  jwt_secret: "${JWT_SECRET}"
+  jwt_expire_hours: 24
+  rate_limit:
+    requests_per_minute: 60
+    burst_size: 10
+
+# 存储配置
+storage:
+  knowledge_db_path: "knowledge_db"
+  backup_dir: "backups"
+  auto_backup: true
+  backup_interval_hours: 24
+  max_backups: 7
+
+# 监控配置
+monitoring:
+  enable_metrics: true
+  metrics_port: 9090
+  health_check_interval: 30
+  log_requests: true
+  performance_logging: true
+
+# 缓存配置
+cache:
+  enable_redis: false  # 如果有Redis，可以启用
+  redis_host: "localhost"
+  redis_port: 6379
+  redis_db: 0
+  memory_cache_size: 1000
+  cache_ttl_seconds: 3600
+
+# 多语言支持
+languages:
+  default: "zh"
+  supported:
+    - "zh"  # 中文
+    - "en"  # 英文
+  auto_detect: true
+
+# 性能优化配置
+performance:
+  max_concurrent_requests: 100
+  request_timeout: 300
+  connection_pool_size: 10
+  enable_gzip: true
+  static_file_cache: true
+
+# 开发配置
+development:
+  enable_swagger: true
+  enable_debug_endpoints: true
+  mock_llm_responses: false
+  skip_auth_for_development: true
