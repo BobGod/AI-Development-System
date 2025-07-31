@@ -191,6 +191,80 @@
             border-color: #667eea;
         }
 
+        /* 输入框样式 */
+        .input {
+            padding: 10px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            font-size: 14px;
+            width: 100%;
+            transition: border-color 0.3s ease;
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .input::placeholder {
+            color: #a0aec0;
+        }
+
+        /* 卡片样式 */
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            margin-bottom: 20px;
+        }
+
+        .card-header h2 {
+            color: #2d3748;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .card-header p {
+            color: #718096;
+            font-size: 0.9rem;
+        }
+
+        .card-body {
+            /* Card body styles */
+        }
+
+        /* 按钮轮廓样式 */
+        .btn-outline-primary {
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-outline-primary:hover:not(:disabled) {
+            background: #667eea;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .btn-outline-success {
+            background: transparent;
+            color: #48bb78;
+            border: 2px solid #48bb78;
+        }
+
+        .btn-outline-success:hover:not(:disabled) {
+            background: #48bb78;
+            color: white;
+            transform: translateY(-1px);
+        }
+
         /* 新闻列表样式 */
         .news-list {
             display: grid;
@@ -487,12 +561,28 @@
                         </button>
                         
                         <button 
-                            class="btn btn-success"
+                            class="btn btn-primary"
                             :class="{ loading: loading.process }"
                             @click="processSelected"
                             :disabled="selectedNews.length === 0 || loading.process"
                         >
                             🧠 {{ loading.process ? '处理中...' : `生成内容(${selectedNews.length})` }}
+                        </button>
+                        
+                        <button 
+                            class="btn btn-success"
+                            @click="showViralGenerator = !showViralGenerator"
+                        >
+                            🔥 {{ showViralGenerator ? '隐藏爆款生成器' : '爆款文章生成器' }}
+                        </button>
+                        
+                        <button 
+                            class="btn btn-primary"
+                            :class="{ loading: loading.autoViral }"
+                            @click="autoGenerateViral"
+                            :disabled="loading.autoViral"
+                        >
+                            🚀 {{ loading.autoViral ? '自动生成中...' : '一键生成爆款' }}
                         </button>
                         
                         <button 
@@ -507,7 +597,283 @@
                 </div>
             </div>
 
-            <!-- 新闻列表 -->
+            <!-- 爆款文章生成器 -->
+        <div v-if="showViralGenerator" class="card" style="margin-bottom: 24px;">
+            <div class="card-header">
+                <h2>🔥 AI爆款文章生成器</h2>
+                <p>输入话题，一键生成10万+阅读量的爆款文章</p>
+            </div>
+            <div class="card-body">
+                <div style="display: grid; grid-template-columns: 1fr 200px 150px; gap: 16px; margin-bottom: 16px; align-items: end;">
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2d3748;">📝 文章话题</label>
+                        <input 
+                            v-model="viralTopic" 
+                            type="text" 
+                            class="input" 
+                            placeholder="例如：ChatGPT震撼发布新功能"
+                            @keyup.enter="generateViralArticle"
+                        >
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2d3748;">📱 发布平台</label>
+                        <select v-model="viralPlatform" class="select">
+                            <option value="wechat">微信公众号</option>
+                            <option value="xiaohongshu">小红书</option>
+                            <option value="weibo">微博</option>
+                        </select>
+                    </div>
+                    <button 
+                        class="btn btn-success"
+                        :class="{ loading: loading.viral }"
+                        @click="generateViralArticle"
+                        :disabled="!viralTopic.trim() || loading.viral"
+                        style="height: 44px;"
+                    >
+                        {{ loading.viral ? '🔄 生成中...' : '🚀 生成爆款' }}
+                    </button>
+                </div>
+                
+                <!-- 生成结果展示 -->
+                <div v-if="viralResult" class="content-preview" style="position: relative;">
+                    <button 
+                        class="copy-button btn btn-sm btn-primary"
+                        @click="copyViralContent"
+                    >
+                        📋 复制
+                    </button>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 200px; gap: 20px; margin-bottom: 16px;">
+                        <div>
+                            <div class="content-title">{{ viralResult.title }}</div>
+                            <div class="content-text" style="max-height: 400px; overflow-y: auto;">{{ viralResult.content }}</div>
+                        </div>
+                        <div style="background: #f0f4ff; padding: 16px; border-radius: 8px;">
+                            <h4 style="margin-bottom: 12px; color: #667eea;">📊 爆款预测</h4>
+                            <div style="margin-bottom: 8px;">
+                                <span style="font-weight: 600;">🔥 爆款指数:</span> 
+                                <span :style="{ color: viralResult.viral_score >= 60 ? '#16a085' : viralResult.viral_score >= 40 ? '#f39c12' : '#e74c3c' }">
+                                    {{ viralResult.viral_score }}/100
+                                </span>
+                            </div>
+                            <div style="margin-bottom: 8px;">
+                                <span style="font-weight: 600;">👀 预测阅读量:</span> 
+                                <span :style="{ color: viralResult.predicted_views >= 10000 ? '#16a085' : '#e74c3c', fontWeight: 'bold' }">
+                                    {{ viralResult.predicted_views.toLocaleString() }}
+                                </span>
+                            </div>
+                            <div style="margin-bottom: 8px;">
+                                <span style="font-weight: 600;">💬 互动率:</span> {{ (viralResult.engagement_rate * 100).toFixed(1) }}%
+                            </div>
+                            <div style="margin-bottom: 8px;">
+                                <span style="font-weight: 600;">⏰ 最佳发布:</span> {{ viralResult.best_publish_time }}
+                            </div>
+                            <div style="margin-bottom: 8px;">
+                                <span style="font-weight: 600;">🎯 目标受众:</span> {{ viralResult.target_audience }}
+                            </div>
+                            
+                            <div v-if="viralResult.predicted_views >= 10000" style="margin-top: 12px; padding: 8px; background: #d4edda; border-radius: 6px; color: #155724; font-size: 12px;">
+                                🎉 恭喜！预测达到万+阅读量
+                            </div>
+                            <div v-else style="margin-top: 12px; padding: 8px; background: #f8d7da; border-radius: 6px; color: #721c24; font-size: 12px;">
+                                ⚠️ 建议优化以提升阅读量
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 优化建议 -->
+                    <div v-if="viralResult.optimization_tips && viralResult.optimization_tips.length > 0" style="margin-top: 16px;">
+                        <h4 style="color: #667eea; margin-bottom: 8px;">💡 优化建议</h4>
+                        <div style="display: grid; gap: 8px;">
+                            <div 
+                                v-for="tip in viralResult.optimization_tips.slice(0, 3)" 
+                                :key="tip"
+                                style="background: #fff3cd; padding: 8px 12px; border-radius: 6px; border-left: 3px solid #ffc107; font-size: 14px;"
+                            >
+                                {{ tip }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 热门关键词 -->
+                    <div v-if="viralResult.trending_keywords && viralResult.trending_keywords.length > 0" style="margin-top: 16px;">
+                        <h4 style="color: #667eea; margin-bottom: 8px;">🏷️ 热门关键词</h4>
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                            <span 
+                                v-for="keyword in viralResult.trending_keywords.slice(0, 8)" 
+                                :key="keyword"
+                                style="background: #e1f5fe; padding: 4px 8px; border-radius: 4px; font-size: 12px; color: #0277bd;"
+                            >
+                                #{{ keyword }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 自动生成的爆款文章展示区域 -->
+        <div v-if="showAutoGenerated && autoGeneratedArticles.length > 0" class="card" style="margin-bottom: 24px;">
+            <div class="card-header">
+                <h2>🚀 AI自动生成的爆款文章</h2>
+                <p>基于当前热门新闻自动生成，已优化到最佳状态</p>
+            </div>
+            <div class="card-body">
+                <div style="display: grid; gap: 20px;">
+                    <div 
+                        v-for="(article, index) in autoGeneratedArticles" 
+                        :key="index"
+                        style="border: 2px solid #e2e8f0; border-radius: 12px; padding: 20px; position: relative;"
+                        :style="{ borderColor: article.predicted_views >= 10000 ? '#48bb78' : '#e2e8f0' }"
+                    >
+                        <!-- 复制按钮 -->
+                        <button 
+                            class="btn btn-sm btn-success"
+                            @click="copyContent(`${article.viral_title}\n\n${article.viral_content}`)"
+                            style="position: absolute; top: 16px; right: 16px;"
+                        >
+                            📋 复制
+                        </button>
+                        
+                        <!-- 文章信息 -->
+                        <div style="display: grid; grid-template-columns: 1fr 250px; gap: 20px;">
+                            <div>
+                                <h3 style="color: #2d3748; margin-bottom: 12px; font-size: 1.3rem; font-weight: 700;">
+                                    {{ article.viral_title }}
+                                </h3>
+                                
+                                <div style="background: #f7fafc; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 0.9rem; color: #718096;">
+                                    📰 原新闻: {{ article.original_title }}
+                                    <br>
+                                    📍 来源: {{ article.original_source }} | 🔥 原热度: {{ article.original_heat_score }}分
+                                </div>
+                                
+                                <div class="content-text" style="max-height: 300px; overflow-y: auto; line-height: 1.6;">
+                                    {{ article.viral_content }}
+                                </div>
+                                
+                                <!-- 热门关键词 -->
+                                <div v-if="article.trending_keywords && article.trending_keywords.length > 0" style="margin-top: 16px;">
+                                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                        <span 
+                                            v-for="keyword in article.trending_keywords.slice(0, 5)" 
+                                            :key="keyword"
+                                            style="background: #e1f5fe; padding: 4px 8px; border-radius: 4px; font-size: 12px; color: #0277bd;"
+                                        >
+                                            #{{ keyword }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 预测数据面板 -->
+                            <div style="background: #f0f4ff; padding: 16px; border-radius: 8px;">
+                                <h4 style="margin-bottom: 12px; color: #667eea;">📊 爆款预测</h4>
+                                
+                                <div style="margin-bottom: 8px;">
+                                    <span style="font-weight: 600;">🔥 爆款指数:</span> 
+                                    <span :style="{ color: article.viral_score >= 70 ? '#16a085' : article.viral_score >= 50 ? '#f39c12' : '#e74c3c', fontWeight: 'bold' }">
+                                        {{ article.viral_score.toFixed(1) }}/100
+                                    </span>
+                                </div>
+                                
+                                <div style="margin-bottom: 8px;">
+                                    <span style="font-weight: 600;">👀 预测阅读量:</span> 
+                                    <span :style="{ color: article.predicted_views >= 10000 ? '#16a085' : '#e74c3c', fontWeight: 'bold' }">
+                                        {{ article.predicted_views.toLocaleString() }}
+                                    </span>
+                                </div>
+                                
+                                <div style="margin-bottom: 8px;">
+                                    <span style="font-weight: 600;">💬 互动率:</span> {{ (article.engagement_rate * 100).toFixed(1) }}%
+                                </div>
+                                
+                                <div style="margin-bottom: 8px;">
+                                    <span style="font-weight: 600;">⏰ 最佳发布:</span> {{ article.best_publish_time }}
+                                </div>
+                                
+                                <div style="margin-bottom: 8px;">
+                                    <span style="font-weight: 600;">🎯 目标受众:</span> {{ article.target_audience }}
+                                </div>
+                                
+                                <div v-if="article.predicted_views >= 10000" style="margin-top: 12px; padding: 8px; background: #d4edda; border-radius: 6px; color: #155724; font-size: 12px;">
+                                    🎉 预测达到万+阅读量！
+                                </div>
+                                <div v-else style="margin-top: 12px; padding: 8px; background: #f8d7da; border-radius: 6px; color: #721c24; font-size: 12px;">
+                                    💡 继续优化可提升阅读量
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 配图预览 -->
+                        <div v-if="article.generated_image" style="margin-top: 16px; padding: 16px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+                            <h4 style="margin-bottom: 12px; color: #495057;">🖼️ 配图预览</h4>
+                            <div style="display: grid; grid-template-columns: 200px 1fr; gap: 16px; align-items: start;">
+                                <div v-if="article.generated_image.image_url" style="text-align: center;">
+                                    <img 
+                                        :src="article.generated_image.image_url" 
+                                        :alt="article.viral_title"
+                                        style="width: 100%; max-width: 200px; height: auto; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
+                                        @error="$event.target.style.display='none'"
+                                    >
+                                    <p style="margin-top: 8px; font-size: 12px; color: #6c757d;">
+                                        {{ article.generated_image.size_kb }}KB
+                                    </p>
+                                </div>
+                                <div v-else style="width: 200px; height: 120px; background: #e9ecef; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #6c757d;">
+                                    <span>❌ 配图生成失败</span>
+                                </div>
+                                <div>
+                                    <div style="margin-bottom: 8px;">
+                                        <span style="font-weight: 600;">🎨 生成方式:</span> 
+                                        <span :style="{ 
+                                            color: article.generated_image.image_source === 'dalle' ? '#28a745' : 
+                                                   article.generated_image.image_source === 'unsplash' ? '#17a2b8' : 
+                                                   article.generated_image.image_source === 'generated' ? '#ffc107' : '#dc3545',
+                                            fontWeight: '500'
+                                        }">
+                                            {{ article.generated_image.image_source === 'dalle' ? 'DALL-E生成' : 
+                                               article.generated_image.image_source === 'unsplash' ? 'Unsplash图库' : 
+                                               article.generated_image.image_source === 'generated' ? '英文图片' : '生成失败' }}
+                                        </span>
+                                    </div>
+                                    <div v-if="article.generated_image.prompt" style="margin-bottom: 8px;">
+                                        <span style="font-weight: 600;">💭 图片描述:</span> 
+                                        <span style="font-size: 13px; color: #6c757d;">{{ article.generated_image.prompt.slice(0, 80) }}...</span>
+                                    </div>
+                                    <div v-if="article.generated_image.image_url">
+                                        <button 
+                                            class="btn btn-sm btn-outline-primary"
+                                            @click="downloadImage(article.generated_image.image_url, article.viral_title)"
+                                            style="margin-right: 8px;"
+                                        >
+                                            📥 下载图片
+                                        </button>
+                                        <button 
+                                            class="btn btn-sm btn-outline-success"
+                                            @click="copyImageUrl(article.generated_image.image_url)"
+                                        >
+                                            🔗 复制链接
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px; text-align: center;">
+                    <button 
+                        class="btn btn-secondary"
+                        @click="showAutoGenerated = false"
+                    >
+                        ✖️ 隐藏自动生成结果
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 新闻列表 -->
             <div class="news-list">
                 <transition-group name="slide" tag="div">
                     <div 
@@ -598,6 +964,64 @@
                         <div class="content-title">{{ content.optimized_title }}</div>
                         <div class="content-text">{{ content.formatted_content }}</div>
                         
+                        <!-- 配图预览 -->
+                        <div v-if="content.generated_image" style="margin: 16px 0; padding: 16px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+                            <h4 style="margin-bottom: 12px; color: #495057;">🖼️ 生成配图</h4>
+                            <div style="display: grid; grid-template-columns: 200px 1fr; gap: 16px; align-items: start;">
+                                <div v-if="content.generated_image.image_url" style="text-align: center;">
+                                    <img 
+                                        :src="content.generated_image.image_url" 
+                                        :alt="content.optimized_title"
+                                        style="width: 100%; max-width: 200px; height: auto; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
+                                        @error="$event.target.style.display='none'"
+                                    >
+                                    <p style="margin-top: 8px; font-size: 12px; color: #6c757d;">
+                                        {{ content.generated_image.size_kb }}KB
+                                    </p>
+                                </div>
+                                <div v-else style="width: 200px; height: 120px; background: #e9ecef; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #6c757d;">
+                                    <span>❌ 配图生成失败</span>
+                                </div>
+                                <div>
+                                    <div style="margin-bottom: 8px;">
+                                        <span style="font-weight: 600;">🎨 生成方式:</span> 
+                                        <span :style="{ 
+                                            color: content.generated_image.image_source === 'dalle' ? '#28a745' : 
+                                                   content.generated_image.image_source === 'unsplash' ? '#17a2b8' : 
+                                                   content.generated_image.image_source === 'generated' ? '#ffc107' : '#dc3545',
+                                            fontWeight: '500'
+                                        }">
+                                            {{ content.generated_image.image_source === 'dalle' ? 'DALL-E生成' : 
+                                               content.generated_image.image_source === 'unsplash' ? 'Unsplash图库' : 
+                                               content.generated_image.image_source === 'generated' ? '文字图片' : '生成失败' }}
+                                        </span>
+                                    </div>
+                                    <div v-if="content.generated_image.prompt" style="margin-bottom: 8px;">
+                                        <span style="font-weight: 600;">💭 图片描述:</span> 
+                                        <span style="font-size: 13px; color: #6c757d;">{{ content.generated_image.prompt.slice(0, 100) }}...</span>
+                                    </div>
+                                    <div v-if="content.generated_image.image_url">
+                                        <button 
+                                            class="btn btn-sm btn-outline-primary"
+                                            @click="downloadImage(content.generated_image.image_url, content.optimized_title)"
+                                            style="margin-right: 8px;"
+                                        >
+                                            📥 下载图片
+                                        </button>
+                                        <button 
+                                            class="btn btn-sm btn-outline-success"
+                                            @click="copyImageUrl(content.generated_image.image_url)"
+                                        >
+                                            🔗 复制链接
+                                        </button>
+                                    </div>
+                                    <div v-if="content.generated_image.error" style="color: #dc3545; font-size: 13px; margin-top: 8px;">
+                                        ⚠️ {{ content.generated_image.error }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div class="news-meta">
                             <span>🎯 互动评分: {{ content.engagement_score.toFixed(1) }}分</span>
                             <span>⏱️ 阅读时间: {{ content.reading_time }}秒</span>
@@ -622,13 +1046,23 @@
                     loading: {
                         refresh: false,
                         process: false,
-                        images: false
+                        images: false,
+                        viral: false,
+                        autoViral: false
                     },
                     sortBy: 'heat_score',
                     filterSource: '',
                     newsLimit: 20,
                     activePlatform: 'wechat',
-                    systemStatus: 'status-online'
+                    systemStatus: 'status-online',
+                    // 爆款文章生成器相关
+                    showViralGenerator: false,
+                    viralTopic: '',
+                    viralPlatform: 'wechat',
+                    viralResult: null,
+                    // 自动生成的爆款文章
+                    autoGeneratedArticles: [],
+                    showAutoGenerated: false
                 }
             },
             computed: {
@@ -794,6 +1228,87 @@
                     try {
                         await navigator.clipboard.writeText(content);
                         alert('内容已复制到剪贴板！');
+                    } catch (error) {
+                        console.error('复制失败:', error);
+                        alert('复制失败');
+                    }
+                },
+                async generateViralArticle() {
+                    if (!this.viralTopic.trim()) return;
+                    
+                    this.loading.viral = true;
+                    try {
+                        const response = await axios.post('/api/viral/generate', {
+                            topic: this.viralTopic,
+                            platform: this.viralPlatform
+                        });
+                        
+                        if (response.data.status === 'success') {
+                            this.viralResult = response.data.data;
+                            alert(`爆款文章生成成功！预测阅读量: ${this.viralResult.predicted_views.toLocaleString()}`);
+                        }
+                    } catch (error) {
+                        console.error('爆款文章生成失败:', error);
+                        alert('生成失败，请重试');
+                    } finally {
+                        this.loading.viral = false;
+                    }
+                },
+                async autoGenerateViral() {
+                    this.loading.autoViral = true;
+                    try {
+                        const response = await axios.post('/api/viral/auto-generate', null, {
+                            params: {
+                                count: 5,
+                                platform: 'wechat'
+                            }
+                        });
+                        
+                        if (response.data.status === 'success') {
+                            this.autoGeneratedArticles = response.data.data.articles;
+                            this.showAutoGenerated = true;
+                            
+                            const summary = response.data.data.summary;
+                            alert(`✅ 自动生成完成！\n📊 成功生成 ${response.data.data.total_generated} 篇爆款文章\n🔥 平均爆款指数: ${summary.avg_viral_score.toFixed(1)}分\n👀 总预测阅读量: ${summary.total_predicted_views.toLocaleString()}\n🎯 万+文章数: ${summary.articles_with_10k_plus}篇`);
+                        }
+                    } catch (error) {
+                        console.error('自动生成爆款文章失败:', error);
+                        alert('自动生成失败，请重试');
+                    } finally {
+                        this.loading.autoViral = false;
+                    }
+                },
+                async copyViralContent() {
+                    if (!this.viralResult) return;
+                    
+                    const content = `${this.viralResult.title}\n\n${this.viralResult.content}`;
+                    try {
+                        await navigator.clipboard.writeText(content);
+                        alert('爆款文章已复制到剪贴板！');
+                    } catch (error) {
+                        console.error('复制失败:', error);
+                        alert('复制失败');
+                    }
+                },
+                async downloadImage(imageUrl, filename) {
+                    try {
+                        const link = document.createElement('a');
+                        link.href = imageUrl;
+                        link.download = `${filename.replace(/[^\w\s]/gi, '')}.jpg`;
+                        link.target = '_blank';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        alert('图片下载已开始');
+                    } catch (error) {
+                        console.error('下载失败:', error);
+                        alert('下载失败');
+                    }
+                },
+                async copyImageUrl(imageUrl) {
+                    try {
+                        await navigator.clipboard.writeText(imageUrl);
+                        alert('图片链接已复制到剪贴板！');
                     } catch (error) {
                         console.error('复制失败:', error);
                         alert('复制失败');

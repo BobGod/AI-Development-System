@@ -264,7 +264,7 @@ class AIImageGenerator:
             return image_data
 
     def generate_text_image(self, text: str, config: ImageConfig) -> GeneratedImage:
-        """生成文字图片（备用方案）"""
+        """生成文字图片（备用方案）- 使用英文避免中文乱码"""
         try:
             # 创建图片
             img = Image.new('RGB', (config.width, config.height), (45, 55, 72))  # 深蓝灰色背景
@@ -277,27 +277,45 @@ class AIImageGenerator:
                     font_large = ImageFont.truetype("arial.ttf", 48)
                     font_small = ImageFont.truetype("arial.ttf", 24)
                 else:  # macOS/Linux
-                    font_large = ImageFont.truetype("/System/Library/Fonts/Arial.ttf", 48)
-                    font_small = ImageFont.truetype("/System/Library/Fonts/Arial.ttf", 24)
+                    try:
+                        font_large = ImageFont.truetype("/System/Library/Fonts/Arial.ttf", 48)
+                        font_small = ImageFont.truetype("/System/Library/Fonts/Arial.ttf", 24)
+                    except:
+                        font_large = ImageFont.load_default()
+                        font_small = ImageFont.load_default()
             except:
                 font_large = ImageFont.load_default()
                 font_small = ImageFont.load_default()
             
-            # 绘制主标题
-            main_text = "AI 新闻"
-            bbox = draw.textbbox((0, 0), main_text, font=font_large)
-            text_width = bbox[2] - bbox[0]
-            text_height = bbox[3] - bbox[1]
+            # 绘制主标题 - 使用英文
+            main_text = "AI News"
+            try:
+                bbox = draw.textbbox((0, 0), main_text, font=font_large)
+                text_width = bbox[2] - bbox[0]
+                text_height = bbox[3] - bbox[1]
+            except:
+                text_width = len(main_text) * 20
+                text_height = 48
             
             x = (config.width - text_width) // 2
             y = config.height // 2 - 50
             
             draw.text((x, y), main_text, fill=(255, 255, 255), font=font_large)
             
-            # 绘制副标题
-            sub_text = text[:30] + "..." if len(text) > 30 else text
-            bbox = draw.textbbox((0, 0), sub_text, font=font_small)
-            text_width = bbox[2] - bbox[0]
+            # 绘制副标题 - 使用简化的英文关键词
+            if any(word in text.lower() for word in ['gpt', 'ai', 'openai']):
+                sub_text = "AI • Technology • Innovation"
+            elif any(word in text.lower() for word in ['robot', '机器人']):
+                sub_text = "Robot • AI • Future"
+            elif any(word in text.lower() for word in ['data', '数据']):
+                sub_text = "Data • Analytics • Intelligence"
+            else:
+                sub_text = "AI • News • Technology"
+            try:
+                bbox = draw.textbbox((0, 0), sub_text, font=font_small)
+                text_width = bbox[2] - bbox[0]
+            except:
+                text_width = len(sub_text) * 12
             
             x = (config.width - text_width) // 2
             y = config.height // 2 + 20
@@ -318,7 +336,7 @@ class AIImageGenerator:
             return GeneratedImage(
                 image_data=image_data,
                 config=config,
-                prompt=f"Text image: {text}",
+                prompt=f"Text image: {sub_text}",
                 source="generated",
                 filename=filename,
                 size_kb=len(image_data) // 1024
@@ -326,18 +344,30 @@ class AIImageGenerator:
             
         except Exception as e:
             logger.error(f"文字图片生成失败: {e}")
-            # 返回空白图片
-            img = Image.new('RGB', (config.width, config.height), (45, 55, 72))
-            output = BytesIO()
-            img.save(output, format=config.format)
-            return GeneratedImage(
-                image_data=output.getvalue(),
-                config=config,
-                prompt="Empty image",
-                source="generated",
-                filename="empty.png",
-                size_kb=len(output.getvalue()) // 1024
-            )
+            # 返回最简单的图片
+            try:
+                img = Image.new('RGB', (config.width, config.height), (45, 55, 72))
+                output = BytesIO()
+                img.save(output, format='PNG')
+                return GeneratedImage(
+                    image_data=output.getvalue(),
+                    config=config,
+                    prompt="Simple image",
+                    source="generated",
+                    filename="simple.png",
+                    size_kb=len(output.getvalue()) // 1024
+                )
+            except:
+                # 最后的兜底方案
+                empty_data = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x01\x00\x00\x00\x01\x00\x08\x02\x00\x00\x00\x90wS\xde\x00\x00\x00\tpHYs\x00\x00\x0b\x13\x00\x00\x0b\x13\x01\x00\x9a\x9c\x18\x00\x00\x00\x17IDAT\x08\x1dc```bPPP\x00\x02\xac\xac\xac\x00\x05\x06\x06\x06\x00\x00\x00\x00\x00\x01?\x1e\x99\x85\x00\x00\x00\x00IEND\xaeB`\x82'
+                return GeneratedImage(
+                    image_data=empty_data,
+                    config=config,
+                    prompt="Empty image",
+                    source="generated",
+                    filename="empty.png",
+                    size_kb=1
+                )
 
     async def generate_image_for_news(self, title: str, content: str, platform: str = "wechat") -> GeneratedImage:
         """为新闻生成配图"""
@@ -481,6 +511,91 @@ async def test_image_generator():
             print(f"来源: {item['source']}")
             print(f"路径: {item['filepath']}")
             print()
+
+    def extract_english_keywords(self, text: str) -> str:
+        """从中文新闻标题中提取英文关键词"""
+        # 常见AI中英文对照词典
+        keyword_mapping = {
+            "GPT": "GPT",
+            "ChatGPT": "ChatGPT", 
+            "OpenAI": "OpenAI",
+            "AI": "AI",
+            "人工智能": "Artificial Intelligence",
+            "机器学习": "Machine Learning",
+            "深度学习": "Deep Learning",
+            "神经网络": "Neural Network",
+            "大模型": "Large Language Model",
+            "LLM": "LLM",
+            "模型": "Model",
+            "算法": "Algorithm",
+            "数据": "Data",
+            "训练": "Training",
+            "推理": "Inference",
+            "生成": "Generation",
+            "对话": "Conversation",
+            "聊天": "Chat",
+            "机器人": "Robot",
+            "自动驾驶": "Autonomous Driving",
+            "计算机视觉": "Computer Vision",
+            "自然语言": "Natural Language",
+            "语音": "Speech",
+            "图像": "Image",
+            "视频": "Video",
+            "文本": "Text",
+            "代码": "Code",
+            "编程": "Programming",
+            "软件": "Software",
+            "技术": "Technology",
+            "科技": "Tech",
+            "创新": "Innovation",
+            "发布": "Release",
+            "更新": "Update",
+            "升级": "Upgrade",
+            "突破": "Breakthrough",
+            "革命": "Revolution",
+            "未来": "Future",
+            "智能": "Intelligence",
+            "系统": "System",
+            "平台": "Platform",
+            "应用": "Application",
+            "工具": "Tool",
+            "服务": "Service",
+            "云": "Cloud",
+            "边缘": "Edge",
+            "物联网": "IoT",
+            "区块链": "Blockchain",
+            "元宇宙": "Metaverse",
+            "VR": "VR",
+            "AR": "AR",
+            "芯片": "Chip",
+            "处理器": "Processor",
+            "GPU": "GPU",
+            "CPU": "CPU",
+            "量子": "Quantum",
+            "5G": "5G",
+            "6G": "6G"
+        }
+        
+        # 提取已有的英文词汇
+        import re
+        english_words = re.findall(r'[A-Za-z0-9]+', text)
+        result_words = []
+        
+        # 添加英文词汇
+        for word in english_words:
+            if len(word) > 1:  # 排除单个字母
+                result_words.append(word)
+        
+        # 根据中文内容添加对应英文词汇
+        for chinese, english in keyword_mapping.items():
+            if chinese in text and english not in result_words:
+                result_words.append(english)
+        
+        # 如果没有找到关键词，使用默认的
+        if not result_words:
+            result_words = ["AI", "Technology", "Innovation"]
+        
+        return " • ".join(result_words[:3])  # 最多3个关键词，用点分隔
 
 if __name__ == "__main__":
     asyncio.run(test_image_generator())

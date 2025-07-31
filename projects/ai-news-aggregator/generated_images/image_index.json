@@ -1,0 +1,23 @@
+{
+  "generated_time": "2025-07-31T13:40:22.581784",
+  "platforms": {
+    "wechat": [
+      {
+        "news_title": "凌晨，Qwen又更新了，3090就能跑，3B激活媲美GPT-4o",
+        "filepath": "generated_images/wechat/text_ab20330a.png",
+        "filename": "text_ab20330a.png",
+        "source": "generated",
+        "size_kb": 7
+      }
+    ],
+    "xiaohongshu": [
+      {
+        "news_title": "凌晨，Qwen又更新了，3090就能跑，3B激活媲美GPT-4o",
+        "filepath": "generated_images/xiaohongshu/text_ab20330a.png",
+        "filename": "text_ab20330a.png",
+        "source": "generated",
+        "size_kb": 11
+      }
+    ]
+  }
+}
